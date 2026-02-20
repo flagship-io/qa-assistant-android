@@ -1,0 +1,36 @@
+package com.abtasty.qa_assistant_android
+
+import android.app.Activity
+import android.os.Bundle
+import android.view.ViewGroup
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import com.abtasty.qa_assistant_android.ui.navigation.QAAContentNavigator
+import com.google.android.material.bottomsheet.BottomSheetDialog
+
+class QAADialog(val activity: Activity, val onClose: () -> Unit) : BottomSheetDialog(activity) {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        val composeView = ComposeView(activity).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            isFocusable = true
+            isFocusableInTouchMode = true
+            requestFocus()
+            setContent {
+                QAAContentNavigator(onClose = {
+                    onClose()
+                    dismiss()
+                })
+            }
+        }
+        setContentView(
+            composeView,
+            ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        )
+    }
+}

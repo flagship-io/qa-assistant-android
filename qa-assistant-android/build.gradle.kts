@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.compose.compiler)
 }
 
 kotlin {
@@ -12,8 +13,12 @@ android {
     compileSdk = 36
     buildFeatures.buildConfig = true
 
+    buildFeatures {
+        compose = true
+    }
+
     defaultConfig {
-        minSdk = 21
+        minSdk = 23
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
@@ -37,10 +42,14 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.ui)
+    implementation(libs.material)
+    implementation(libs.androidx.navigation.compose)
+//    implementation(libs.material)
     compileOnly(project(":flagship"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
-    implementation(libs.material)
+    implementation(libs.androidx.material3)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

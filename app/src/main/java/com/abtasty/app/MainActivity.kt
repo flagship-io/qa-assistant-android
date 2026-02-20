@@ -13,7 +13,8 @@ import com.abtasty.app.databinding.ActivityMainBinding
 import com.abtasty.flagship.hits.Screen
 import com.abtasty.flagship.main.Flagship
 import com.abtasty.flagship.main.FlagshipConfig
-import com.abtasty.qa_assistant_android.QAAssistant
+//import com.abtasty.qa_assistant_android.QAAssistant
+import com.abtasty.qa_assistant_android.QAAssistant2
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -69,13 +70,14 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         Flagship.start(application, "bkk4s7gcmjcg07fke9dg", "Q6FDmj6F188nh75lhEato2MwoyXDS7y34VrAL4Aa", FlagshipConfig.DecisionApi())
             .invokeOnCompletion {
-                QAAssistant().open(this)
                 println("[APP] FLAGSHIP STARTED")
                 val visitor = Flagship.newVisitor("visitorId8937", true).build()
+                QAAssistant2.open(this)
                 visitor.fetchFlags().invokeOnCompletion {
                     println("[APP] FETCHED FLAGS")
                 }
                 runBlocking {
+                    println("#QA SEND HIT")
                     delay(2000)
                     visitor.sendHit(Screen("AAAAAAAAAAAA"))
                 }
