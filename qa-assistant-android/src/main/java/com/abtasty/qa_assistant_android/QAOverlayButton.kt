@@ -298,15 +298,13 @@ class QAOverlayButton(application: Application) {
 
     private fun showQABottomSheet(activity: Activity) {
         if (!dialogDisplayed) {
-            println("HEREEEE ")
+
             val dialog = QAADialog(activity, onClose = {
                 dialogDisplayed = false
             })
 
             dialog.setOnCancelListener { dialogDisplayed = false }
             dialog.setOnDismissListener { dialogDisplayed = false }
-            dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
-            dialog.behavior.skipCollapsed = true
 
             dialog.setOnShowListener {
                 val bottomSheet =
@@ -318,108 +316,6 @@ class QAOverlayButton(application: Application) {
             dialogDisplayed = true
         }
     }
-
-//    @Composable
-//    private fun QASheetContent(onClose: () -> Unit) {
-//
-//        Column(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .clip(
-//                    RoundedCornerShape(
-//                        topStart = 24.dp,
-//                        topEnd = 24.dp,
-//                        bottomStart = 24.dp,
-//                        bottomEnd = 24.dp
-//                    )
-//                )
-//                .background(color = colorResource(R.color.primary_background))
-//        ) {
-//            Column(
-//                modifier = Modifier
-//                    .fillMaxSize()
-//                    .padding(8.dp)
-//            ) {
-//                Spacer(Modifier.height(8.dp))
-//                Row(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(4.dp),
-//                    verticalAlignment = Alignment.CenterVertically,
-//                    horizontalArrangement = Arrangement.Center
-//                ) {
-//                    Box(contentAlignment = Alignment.CenterStart)  {
-//                        val interactionSource = remember { MutableInteractionSource() }
-//                        val isPressed = interactionSource.collectIsPressedAsState().value
-//
-//                        val tintColor = if (isPressed) {
-//                            colorResource(R.color.back_arrow_pressed)
-//                        } else {
-//                            colorResource(R.color.back_arrow_normal)
-//                        }
-//
-//                        IconButton(
-//                            onClick = {},
-//                            interactionSource = interactionSource
-//                        ) {
-//                            Icon(
-//                                imageVector = ImageVector.vectorResource(R.drawable.back_arrow),
-//                                contentDescription = null,
-//                                tint = tintColor
-//                            )
-//                        }
-//                    }
-//                    Row(modifier = Modifier.weight(1f), horizontalArrangement = Arrangement.Center) {
-//                        Image(
-//                            imageVector = ImageVector.vectorResource(R.drawable.icon),
-//                            contentDescription = "",
-//                            modifier = Modifier.padding()
-//                        )
-//                        Spacer(Modifier.width(8.dp))
-//                        Text(
-//                            "QA Assistant",
-//                            fontFamily = FontFamily.SansSerif,
-//                            fontSize = 24.sp,
-//                            fontWeight = FontWeight.Normal
-//                        )
-//                    }
-//                    Box(contentAlignment = Alignment.CenterEnd) {
-//                        val interactionSource = remember { MutableInteractionSource() }
-//                        val isPressed = interactionSource.collectIsPressedAsState().value
-//
-//                        val tintColor = if (isPressed) {
-//                            colorResource(R.color.close_pressed)
-//                        } else {
-//                            colorResource(R.color.close_normal)
-//                        }
-//
-//                        IconButton(
-//                            onClick = {},
-//                            interactionSource = interactionSource
-//                        ) {
-//                            Icon(
-//                                imageVector = ImageVector.vectorResource(R.drawable.close),
-//                                contentDescription = null,
-//                                tint = tintColor
-//                            )
-//                        }
-//                    }
-//                }
-////                Text("QA Assistant", style = MaterialTheme.typography.titleLarge)
-//                Spacer(Modifier.height(16.dp))
-//
-//                Button(onClick = { /* TODO actions */ }, modifier = Modifier.fillMaxWidth()) {
-//                    Text("Action 1")
-//                }
-//
-//                Spacer(Modifier.height(12.dp))
-//
-//                OutlinedButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) {
-//                    Text("Fermer")
-//                }
-//            }
-//        }
-//    }
 
     companion object {
         private const val PREFS_NAME = "qa_overlay_button_prefs"

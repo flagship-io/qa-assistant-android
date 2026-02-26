@@ -3,8 +3,8 @@ package com.abtasty.qa_assistant_android.ui.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import com.abtasty.qa_assistant_android.ui.feature.home.HomeScreen
+import com.abtasty.qa_assistant_android.ui.screens.HomeScreen
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 private sealed interface Screen {
     data object Home : Screen
@@ -12,7 +12,7 @@ private sealed interface Screen {
 }
 
 @Composable
-fun QAAContentNavigator(onClose: () -> Unit) {
+fun QAAContentNavigator(behavior: BottomSheetBehavior<*>, onClose: () -> Unit) {
     var screen = remember { mutableStateOf<Screen>(Screen.Home) }.value
 
     androidx.activity.compose.BackHandler {
@@ -24,6 +24,7 @@ fun QAAContentNavigator(onClose: () -> Unit) {
 
     when (val s = screen) {
         Screen.Home -> HomeScreen(
+            behavior = behavior,
             onCampaignClick = { id -> screen = Screen.Detail(id) },
             onClose = onClose
         )

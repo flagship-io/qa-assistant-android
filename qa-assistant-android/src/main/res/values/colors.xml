@@ -13,4 +13,20 @@
     <color name="white">#FFFFFF</color>
     <color name="unselected_tab">#5E5E6E</color>
     <color name="selected_tab">#3100BF</color>
+    <color name="reset_all_normal">#2A2A3C</color>
+    <color name="reset_all_pressed">#3100BF</color>
+    <color name="cell_border">#D8D8E2</color>
+    <color name="accepted">#C7F4EE</color>
+    <color name="rejected">#FED1CD</color>
+    <color name="forced">#FFECBD</color>
+    <color name="text_bold">#00332B</color>
+    <color name="text_light_grey">#5E5E6E</color>
+    <color name="text_disabled">#AFAFBC</color>
+<!--    <color name="item_pressed">#E6E6E6</color>-->
+<!--    <color name="item_pressed">#1A3100BF</color>-->
+    <color name="item_pressed">#E2DCF4</color>
+    <color name="event_type_background">#DBE5FF</color>
+    <color name="event_now">#00806C</color>
+    <color name="event_clear">#B02F25</color>
+    <color name="event_content_background">#F3F3F7</color>
 </resources>

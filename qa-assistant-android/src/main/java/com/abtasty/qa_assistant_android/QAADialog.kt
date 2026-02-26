@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.abtasty.qa_assistant_android.ui.navigation.QAAContentNavigator
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 
 class QAADialog(val activity: Activity, val onClose: () -> Unit) : BottomSheetDialog(activity) {
@@ -19,10 +20,12 @@ class QAADialog(val activity: Activity, val onClose: () -> Unit) : BottomSheetDi
             isFocusableInTouchMode = true
             requestFocus()
             setContent {
-                QAAContentNavigator(onClose = {
-                    onClose()
-                    dismiss()
-                })
+                QAAContentNavigator(
+                    behavior = behavior,
+                    onClose = {
+                        onClose()
+                        dismiss()
+                    })
             }
         }
         setContentView(
@@ -32,5 +35,9 @@ class QAADialog(val activity: Activity, val onClose: () -> Unit) : BottomSheetDi
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
         )
+        behavior.state = BottomSheetBehavior.STATE_EXPANDED
+        behavior.skipCollapsed = true
+//        behavior.isDraggable = true
+
     }
 }

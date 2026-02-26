@@ -45,6 +45,7 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.material)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.ui.tooling.preview)
 //    implementation(libs.material)
     compileOnly(project(":flagship"))
     implementation(libs.androidx.core.ktx)
@@ -53,4 +54,5 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    debugImplementation(libs.androidx.ui.tooling)
 }
