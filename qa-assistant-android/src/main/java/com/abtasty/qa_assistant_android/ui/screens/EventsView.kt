@@ -43,7 +43,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.abtasty.qa_assistant_android.R
+import com.abtasty.qa_assistant_android.ui.components.EventExpandableList
+import com.abtasty.qa_assistant_android.ui.components.EventExpandableRow
 import com.abtasty.qa_assistant_android.ui.components.JsonBox
+import com.abtasty.qa_assistant_android.ui.components.PillBadge
 import com.abtasty.qa_assistant_android.ui.components.ResetAll
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import org.json.JSONObject
@@ -75,21 +78,7 @@ fun getEventList(): List<Event> {
 @Composable
 fun EventsView(behavior: BottomSheetBehavior<*>,
                eventList: List<Event> = getEventList()
-//    eventList: List<Event> = listOf()
 ) {
-
-    val lazyListState = rememberLazyListState()
-
-    val listNotAtTop by remember {
-        derivedStateOf { lazyListState.canScrollBackward }
-    }
-
-    DisposableEffect(listNotAtTop) {
-        behavior.isDraggable = !listNotAtTop
-        onDispose {
-            behavior.isDraggable = true
-        }
-    }
 
     Column(
         modifier = Modifier
@@ -144,98 +133,7 @@ fun EventsView(behavior: BottomSheetBehavior<*>,
                 )
             }
         } else {
-            LazyColumn(
-                state = lazyListState,
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(bottom = 8.dp)
-            ) {
-                items(eventList.size, key = { eventList[it].id }) { item ->
-                    ExpandableRow(event = eventList[item])
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ExpandableRow(event: Event) {
-
-    var expanded by rememberSaveable(event.id) { mutableStateOf(false) }
-
-    val timeString = timeAgo(event.timestamp)
-    val timeColor =
-        colorResource(if (timeString.contains("Just now")) R.color.event_now else R.color.text_light_grey)
-    val iconResource =
-        if (expanded) ImageVector.vectorResource(R.drawable.icon_caret_top) else ImageVector.vectorResource(
-            R.drawable.icon_caret_down
-        )
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() },
-                onClick = { expanded = !expanded }
-            )
-    ) {
-        Box(
-            modifier = Modifier
-                .height(1.dp)
-                .background(Color.LightGray)
-                .fillMaxWidth()
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            BasicText(
-                event.type,
-                modifier = Modifier
-                    .background(
-                        colorResource(R.color.event_type_background),
-                        shape = RoundedCornerShape(50)
-                    )
-                    .padding(all = 8.dp)
-                    .fillMaxWidth(0.25f),
-                style = TextStyle(
-                    fontWeight = FontWeight.SemiBold,
-                    color = colorResource(R.color.text_bold),
-                    textAlign = TextAlign.Center
-                ),
-            )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End,
-                modifier = Modifier.weight(1f)
-            ) {
-                BasicText(
-                    text = timeString,
-                    style = TextStyle(
-                        color = timeColor,
-                        fontSize = 16.sp
-                    ),
-                    maxLines = 1
-                )
-                Icon(
-                    imageVector = iconResource,
-                    contentDescription = null,
-                    modifier = Modifier.padding(start = 8.dp, end = 8.dp)
-                )
-            }
-        }
-
-        AnimatedVisibility(
-            visible = expanded,
-            enter = expandVertically(animationSpec = tween(180)),
-            exit = shrinkVertically(animationSpec = tween(180))
-        ) {
-            Column(
-            ) {
-                JsonBox(event.content.toString(4))
-            }
+            EventExpandableList(eventList, behavior)
         }
     }
 }

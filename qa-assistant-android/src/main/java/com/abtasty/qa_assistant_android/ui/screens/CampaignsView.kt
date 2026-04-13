@@ -10,15 +10,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
@@ -33,13 +29,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
@@ -48,6 +39,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.abtasty.qa_assistant_android.R
+import com.abtasty.qa_assistant_android.ui.components.CampaignListHeader
+import com.abtasty.qa_assistant_android.ui.components.CampaignListItem
 import com.abtasty.qa_assistant_android.ui.components.ResetAll
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
@@ -149,8 +142,6 @@ fun CampaignsView(
                 else expandedIdsList + parentId
         }
 
-
-
         LazyColumn(
             state = lazyListState,
             modifier = modifier
@@ -159,7 +150,7 @@ fun CampaignsView(
         ) {
             parentItems.forEach { parent ->
                 item(key = "parent_${parent.id}") {
-                    ParentRow(
+                    CampaignListHeader(
                         parent,
                         expanded = parent.id in expandedIds,
                         onClick = { toggle(parent.id) },
@@ -182,7 +173,7 @@ fun CampaignsView(
                                 .fillMaxWidth()
                         ) {
                             parent.children.forEach { child ->
-                                ChildRow(
+                                CampaignListItem (
                                     child = child,
                                     onClick = { onChildClick(parent, child) }
                                 )
@@ -192,155 +183,5 @@ fun CampaignsView(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun ParentRow(
-    parentItem: ParentItem,
-    expanded: Boolean,
-    onClick: () -> Unit,
-    isLast: Boolean = false
-) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Box(
-            modifier = Modifier
-                .height(1.dp)
-                .background(Color.LightGray)
-                .fillMaxWidth()
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onClick)
-                .padding(12.dp),
-
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start
-        ) {
-            val iconResource =
-                if (expanded) ImageVector.vectorResource(R.drawable.icon_caret_top) else ImageVector.vectorResource(
-                    R.drawable.icon_caret_down
-                )
-            val color = when (parentItem.status) {
-                Status.Accepted -> colorResource(R.color.accepted)
-                else -> colorResource(R.color.rejected)
-            }
-            val statusTitle = when (parentItem.status) {
-                Status.Accepted -> "Accepted"
-                else -> "Rejected"
-            }
-            Icon(
-                imageVector = iconResource,
-                contentDescription = null,
-                modifier = Modifier.padding(end = 8.dp)
-            )
-            BasicText(
-                statusTitle,
-                modifier = Modifier
-                    .background(
-                        color,
-                        shape = RoundedCornerShape(50)
-                    )
-                    .padding(all = 8.dp),
-                style = TextStyle(
-                    fontWeight = FontWeight.SemiBold,
-                    color = colorResource(R.color.text_bold)
-                )
-            )
-            BasicText(
-                "${parentItem.children.size} campaigns",
-                modifier = Modifier.padding(start = 8.dp),
-                style = TextStyle(
-                    color = colorResource(R.color.text_light_grey)
-                )
-            )
-        }
-        Box(
-            modifier = Modifier
-                .height(if (expanded || isLast) 1.dp else 0.dp)
-                .background(Color.LightGray)
-                .fillMaxWidth()
-        )
-    }
-}
-
-@Composable
-private fun ChildRow(child: ChildItem, onClick: () -> Unit) {
-    val color = when (child.status) {
-        Status.Accepted -> colorResource(R.color.accepted)
-        Status.Forced -> colorResource(R.color.forced)
-        Status.Hidden -> colorResource(R.color.forced)
-        else -> colorResource(R.color.rejected)
-    }
-    val statusTitle = when (child.status) {
-        Status.AllocationRejected -> Status.Rejected.title
-        Status.TargetingRejected -> Status.Rejected.title
-        else -> child.status.title
-    }
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                if (isPressed) colorResource(R.color.item_pressed) else Color.Transparent
-            )
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
-            .padding(start = 12.dp, top = 8.dp, bottom = 8.dp, end = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.End
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth(0.7f)
-                .padding(end = 8.dp)
-                .weight(1f)
-        ) {
-            BasicText(
-                modifier = Modifier
-                    .basicMarquee(
-                        iterations = Int.MAX_VALUE,
-                        initialDelayMillis = 1000,
-                        repeatDelayMillis = 3000,
-                        velocity = 40.dp
-                    ),
-                text = child.label,
-                style = TextStyle(
-                    color = colorResource(R.color.text_bold),
-                    fontSize = 18.sp,
-                ),
-                maxLines = 1
-            )
-            BasicText(
-                text = child.details,
-                style = TextStyle(
-                    color = colorResource(R.color.text_light_grey),
-                    fontSize = 16.sp
-                ),
-                maxLines = 1
-            )
-        }
-        BasicText(
-            text = statusTitle,
-            modifier = Modifier
-                .background(
-                    color,
-                    shape = RoundedCornerShape(50)
-                )
-                .padding(all = 8.dp)
-                .fillMaxWidth(0.2f),
-            style = TextStyle(
-                fontWeight = FontWeight.SemiBold,
-                color = colorResource(R.color.text_bold),
-                textAlign = TextAlign.Center
-            ),
-        )
-        Icon(
-            imageVector = ImageVector.vectorResource(R.drawable.icon_caret_right),
-            contentDescription = null,
-            modifier = Modifier.padding(start = 8.dp)
-        )
-
     }
 }

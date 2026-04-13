@@ -1,8 +1,16 @@
 package com.abtasty.qa_assistant_android
 
 import android.content.Context
-import com.abtasty.flagship.qa_assistant.QAAssistantCoreEventListener
-import kotlinx.coroutines.Job
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
+import com.abtasty.flagship.model.Campaign
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.lang.ref.WeakReference
 
@@ -47,17 +55,69 @@ import java.lang.ref.WeakReference
 //
 //}
 
-object QAAssistant2 : IQAAssistant2 {
+object QAAssistant2 : IQAAssistant2, LifecycleEventObserver {
 
     private var contextWeakReference: WeakReference<Context>? = null
+
+    internal var envID: String? = null
+
+    private var _coroutineScope: CoroutineScope? = null
+    internal val coroutineScope: CoroutineScope
+        get() = _coroutineScope ?: throw IllegalStateException("QAAssistant n'est pas initialisé. Appelez open() d'abord.")
+
     private var adapter: IQAAssistant2? = null
     private var overlayButton: QAOverlayButton? = null
 
-    fun open(context: Context) {
+    internal val campaignManager = CampaignManager()
+
+    fun open(context: Context, envID: String) {
         contextWeakReference = WeakReference(context.applicationContext)
+        this.envID = envID
+        initializeCoroutineScope()
+        _coroutineScope?.launch(Dispatchers.Main) {
+            println("CT >> " + Thread.currentThread().name)
+            bindToApplicationLifecycle()
+        }
+        _coroutineScope?.launch {
+
+            val campaignsUpdated = context.let {
+                campaignManager.updateCampaigns(it, envID)
+            }
+            println("[QA ASSISTANT] Campaigns updated : $campaignsUpdated")
+        }
         setAdapter()
         open()
         showOverlay(context)
+    }
+
+    private fun initializeCoroutineScope() {
+        if (_coroutineScope == null) {
+            _coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        }
+    }
+
+    private fun bindToApplicationLifecycle() {
+        ProcessLifecycleOwner.get().lifecycle.addObserver(this)
+    }
+
+    override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+        when (event) {
+            Lifecycle.Event.ON_START -> {
+                if (_coroutineScope == null) {
+                    initializeCoroutineScope()
+                }
+            }
+            Lifecycle.Event.ON_STOP -> {
+                // L'application passe en arrière-plan
+                // Vous pouvez choisir de garder le scope actif ou de le suspendre
+            }
+            Lifecycle.Event.ON_DESTROY -> {
+
+                _coroutineScope?.cancel()
+                _coroutineScope = null
+            }
+            else -> {}
+        }
     }
 
     private fun setAdapter() {
@@ -85,6 +145,9 @@ object QAAssistant2 : IQAAssistant2 {
         adapter = null
         contextWeakReference?.clear()
         contextWeakReference = null
+        _coroutineScope?.cancel()
+        _coroutineScope = null
+        ProcessLifecycleOwner.get().lifecycle.removeObserver(this)
     }
 
     override fun onVisitorChanged(jsonVisitor: JSONObject) {

@@ -72,7 +72,7 @@ class MainActivity : AppCompatActivity() {
             .invokeOnCompletion {
                 println("[APP] FLAGSHIP STARTED")
                 val visitor = Flagship.newVisitor("visitorId8937", true).build()
-                QAAssistant2.open(this)
+                QAAssistant2.open(this, "bkk4s7gcmjcg07fke9dg")
                 visitor.fetchFlags().invokeOnCompletion {
                     println("[APP] FETCHED FLAGS")
                 }
