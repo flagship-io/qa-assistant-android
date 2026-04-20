@@ -46,7 +46,7 @@ fun Header(onBack: () -> Unit = {}, onClose: () -> Unit) {
             }
 
             IconButton(
-                onClick = {},
+                onClick = { onBack() },
                 interactionSource = interactionSource
             ) {
                 Icon(

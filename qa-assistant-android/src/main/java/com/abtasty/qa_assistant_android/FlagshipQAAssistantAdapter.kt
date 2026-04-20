@@ -1,10 +1,15 @@
 package com.abtasty.qa_assistant_android
 
+import androidx.compose.ui.res.colorResource
+import com.abtasty.flagship.hits.Hit
+import com.abtasty.flagship.model.Campaign
 import com.abtasty.flagship.qa_assistant.QAAssistantBridge
 import com.abtasty.flagship.qa_assistant.QAAssistantBridge2
 import com.abtasty.flagship.qa_assistant.QAAssistantBridgeEvent
 import com.abtasty.flagship.qa_assistant.QAAssistantCoreEventListener
 import com.abtasty.flagship.qa_assistant.QAAssistantEventListener
+import com.abtasty.flagship.visitor.VisitorDelegateDTO
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -61,39 +66,60 @@ import org.json.JSONObject
 //    }
 //}
 
-class FlagshipQAAssistantAdapter2(val qaAssistant: QAAssistant2): IQAAssistant2 {
+class FlagshipQAAssistantAdapter2(val qaAssistant: QAAssistant2) : IQAAssistant2 {
 
     var _qaAssistantMutableSharedFlow: MutableSharedFlow<QAAssistantBridgeEvent>? = null
+    private var collectionJob: Job? = null
 
-    val _qaAssistantSharedFlow: SharedFlow<QAAssistantBridgeEvent>?
-    get() = _qaAssistantMutableSharedFlow?.asSharedFlow()
 
-    override fun initialize(): IQAAssistant2? {
+//    val _qaAssistantSharedFlow: SharedFlow<QAAssistantBridgeEvent>?
+//    get() = _qaAssistantMutableSharedFlow?.asSharedFlow()
+
+    override fun open(): IQAAssistant2 {
         try {
-            _qaAssistantMutableSharedFlow = QAAssistantBridge2.initialize()
-            QAAssistantBridge2.coroutineScope.launch {
-                _qaAssistantMutableSharedFlow?.collect { event ->
-                    when (event) {
-                        is QAAssistantBridgeEvent.QAAssistantSendHit -> qaAssistant.onHitEmitted(event.hit)
-                        else -> {
-                            println("#QA [QA ASSISTANT] Adapter2 RECEIVED EVENT : $event")
+            if (_qaAssistantMutableSharedFlow != null && collectionJob?.isActive == true) {
+                println("#QA [QA ASSISTANT] Adapter already initialized, skipping")
+            } else {
+                _qaAssistantMutableSharedFlow = QAAssistantBridge2.initialize()
+                collectionJob = QAAssistantBridge2.coroutineScope?.launch {
+                    println("#QA ASSISTANT COLLECTER INIT")
+                    _qaAssistantMutableSharedFlow?.collect { event ->
+                        when (event) {
+                            is QAAssistantBridgeEvent.QAAssistantSendHit -> this@FlagshipQAAssistantAdapter2.onHitEmitted(
+                                event.hit
+                            )
+
+                            is QAAssistantBridgeEvent.QAAssistantVisitorUpdated -> this@FlagshipQAAssistantAdapter2.onVisitorChanged(
+                                event.visitorDelegateDTO,
+                                event.campaings
+                            )
+
+                            else -> {
+                                println("#QA [QA ASSISTANT] Adapter2 RECEIVED EVENT : $event")
+                            }
                         }
                     }
                 }
+//                collectionJob?.start()
+                println("#QA ASSISTANT COLLECTER EMIT OPEN")
+                _qaAssistantMutableSharedFlow?.tryEmit(QAAssistantBridgeEvent.QAAssistantOpen())
             }
-            return this
         } catch (e: Exception) {
-            return null
         }
-    }
-
-    override fun open() {
-        _qaAssistantMutableSharedFlow?.tryEmit(QAAssistantBridgeEvent.QAAssistantOpen())
+        return this
     }
 
     override fun close() {
         _qaAssistantMutableSharedFlow?.tryEmit(QAAssistantBridgeEvent.QAAssistantClose())
+        collectionJob?.cancel()
+
     }
 
+    override fun onVisitorChanged(visitorDelegateDTO: VisitorDelegateDTO, campaigns: List<Campaign>?) {
+        qaAssistant.onVisitorChanged(visitorDelegateDTO, campaigns)
+    }
 
+    override fun onHitEmitted(hit: Hit.HitDTO) {
+        qaAssistant.onHitEmitted(hit)
+    }
 }

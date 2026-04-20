@@ -5,7 +5,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
+import com.abtasty.flagship.hits.Hit
 import com.abtasty.flagship.model.Campaign
+import com.abtasty.flagship.qa_assistant.QAAssistantBridge
+import com.abtasty.flagship.visitor.VisitorDelegateDTO
+import com.abtasty.qa_assistant_android.ui.navigation.QAAContentNavigator
+import com.abtasty.qa_assistant_android.ui.navigation.savedScreen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -69,6 +74,9 @@ object QAAssistant2 : IQAAssistant2, LifecycleEventObserver {
     private var overlayButton: QAOverlayButton? = null
 
     internal val campaignManager = CampaignManager()
+    internal var currentVisitor: VisitorDelegateDTO? = null
+
+    internal val hitManager = HitManager()
 
     fun open(context: Context, envID: String) {
         contextWeakReference = WeakReference(context.applicationContext)
@@ -78,15 +86,15 @@ object QAAssistant2 : IQAAssistant2, LifecycleEventObserver {
             println("CT >> " + Thread.currentThread().name)
             bindToApplicationLifecycle()
         }
-        _coroutineScope?.launch {
-
-            val campaignsUpdated = context.let {
-                campaignManager.updateCampaigns(it, envID)
-            }
-            println("[QA ASSISTANT] Campaigns updated : $campaignsUpdated")
-        }
         setAdapter()
-        open()
+//        _coroutineScope?.launch {
+//            val campaignsUpdated = context.let {
+//                campaignManager.updateCampaigns(it, envID)
+//            }
+//            println("[QA ASSISTANT] Campaigns updated : $campaignsUpdated")
+//        }
+//        setAdapter()
+//        open()
         showOverlay(context)
     }
 
@@ -122,7 +130,7 @@ object QAAssistant2 : IQAAssistant2, LifecycleEventObserver {
 
     private fun setAdapter() {
         try {
-            adapter = FlagshipQAAssistantAdapter2(this).initialize()
+            adapter = FlagshipQAAssistantAdapter2(this).open()
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -134,15 +142,13 @@ object QAAssistant2 : IQAAssistant2, LifecycleEventObserver {
         }
     }
 
-    override fun open() {
-        adapter?.open()
-    }
 
     override fun close() {
         overlayButton?.dismiss()
         overlayButton = null
         adapter?.close()
         adapter = null
+        savedScreen = null
         contextWeakReference?.clear()
         contextWeakReference = null
         _coroutineScope?.cancel()
@@ -150,8 +156,21 @@ object QAAssistant2 : IQAAssistant2, LifecycleEventObserver {
         ProcessLifecycleOwner.get().lifecycle.removeObserver(this)
     }
 
-    override fun onVisitorChanged(jsonVisitor: JSONObject) {
+    override fun onVisitorChanged(visitorDelegateDTO: VisitorDelegateDTO, campaigns: List<Campaign>?) {
+        currentVisitor = visitorDelegateDTO
+        println("[QA ASSISTANT] Flags updated from CORE : ${visitorDelegateDTO.flags}")
+        _coroutineScope?.launch {
+            val campaignsUpdated = contextWeakReference?.get()?.let {
+                if (envID == null) return@let
+                campaignManager.updateCampaigns(it, envID!!, visitorDelegateDTO, campaigns)
+            }
+            println("[QA ASSISTANT] Campaigns updated : $campaignsUpdated")
+        }
+    }
 
+    override fun onHitEmitted(hit: Hit.HitDTO) {
+        println("[QA ASSISTANT] Hit emitted from CORE : $hit")
+        hitManager.addHit(hit)
     }
 }
 

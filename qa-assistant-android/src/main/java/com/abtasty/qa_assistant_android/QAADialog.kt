@@ -9,7 +9,10 @@ import com.abtasty.qa_assistant_android.ui.navigation.QAAContentNavigator
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 
-class QAADialog(val activity: Activity, val onClose: () -> Unit) : BottomSheetDialog(activity) {
+class QAADialog(
+    val activity: Activity,
+    val onClose: () -> Unit
+) : BottomSheetDialog(activity) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

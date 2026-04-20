@@ -23,6 +23,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,16 +44,22 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.abtasty.flagship.model.Campaign
+import com.abtasty.flagship.model.CampaignStatus
+import com.abtasty.qa_assistant_android.CampaignManager
+import com.abtasty.qa_assistant_android.QAAssistant2
 import com.abtasty.qa_assistant_android.R
 import com.abtasty.qa_assistant_android.ui.components.Header
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-data class Campaign(
-    val id: String,
-    val name: String,
-    val status: String
-)
+//data class Campaign(
+//    val id: String,
+//    val name: String,
+//    val status: String
+//)
 
 private enum class HomeTab(val label: String) {
     Campaigns("Campaigns"),
@@ -63,16 +70,32 @@ private enum class HomeTab(val label: String) {
 @Composable
 fun HomeScreen(
     behavior: BottomSheetBehavior<*>,
-    onCampaignClick: (String) -> Unit,
-    onClose: () -> Unit
+    onCampaignClick: (Campaign) -> Unit,
+    onClose: () -> Unit,
+//    viewModel: HomeViewModel = viewModel()
+//    viewModel: HomeViewModel = remember { HomeViewModel() }
+    campaignManager: CampaignManager = QAAssistant2.campaignManager
 ) {
-    val campaigns = remember {
-        listOf(
-            Campaign("1", "Spring Sale", "Running"),
-            Campaign("2", "Black Friday", "Paused"),
-            Campaign("3", "Homepage Test", "Running")
-        )
+//    val campaigns = remember {
+//        listOf(
+//            Campaign("1", "Spring Sale", "Running"),
+//            Campaign("2", "Black Friday", "Paused"),
+//            Campaign("3", "Homepage Test", "Running")
+//        )
+//    }
+
+//    val parentItems by viewModel.parentItems.collectAsState()
+//    val parentItems by campaignManager.campaigns
+//        .map { campaigns -> convertCampaignsToParentItems(campaigns ?: emptyList()) }
+//        .collectAsState(initial = emptyList())
+
+    val campaigns by campaignManager.campaigns.collectAsState()
+
+    val parentItems = remember(campaigns) {
+        campaigns?.let { convertCampaignsToParentItems(it) } ?: emptyList()
     }
+
+    println("[QA ASSISTANT] HomeScreen recomposing with ${parentItems.size} parent items")
 
     var query by rememberSaveable { mutableStateOf("") }
     var tab = rememberSaveable { mutableStateOf(HomeTab.Campaigns) }.value
@@ -208,7 +231,11 @@ fun HomeScreen(
                     ) { page ->
 
                         when (tabs[page]) {
-                            HomeTab.Campaigns -> CampaignsView(behavior = behavior, onChildClick = { parent, child -> })
+                            HomeTab.Campaigns -> CampaignsView(
+                                behavior = behavior,
+                                parentItems = parentItems,
+                                onChildClick = { parent, child -> onCampaignClick(child) }
+                            )
                             HomeTab.Events -> EventsView(behavior = behavior)
                             HomeTab.Context -> ContextView(behavior = behavior)
                         }
@@ -218,4 +245,69 @@ fun HomeScreen(
         }
     }
 }
+
+
+private fun convertCampaignsToParentItems(campaigns: List<Campaign>): List<ParentItem> {
+
+    val acceptedCampaigns = mutableListOf<Campaign>()
+    val rejectedCampaigns = mutableListOf<Campaign>()
+
+   QAAssistant2.currentVisitor?.let { currentVisitor ->
+
+       val flagCampaignIds = currentVisitor.flags.values.mapNotNull { flag ->
+           flag.metadata.campaignId
+       }
+
+       campaigns.forEach { campaign ->
+           val isCampaignAccepted = campaign.campaignMetadata.campaignId in flagCampaignIds
+//           val childItem = ChildItem(
+//               id = campaign.campaignMetadata.campaignId,
+//               label = campaign.campaignMetadata.campaignName,
+//               details = campaign.campaignMetadata.campaignType,
+//               status = if (isCampaignAccepted) Status.Accepted else Status.Rejected
+//           )
+//           campaign.status(if (isCampaignAccepted) CampaignStatus.Accepted else CampaignStatus.Rejected)
+//           if (isCampaignAccepted) {
+//               acceptedCampaigns.add(campaign)
+//           } else {
+//               rejectedCampaigns.add(campaign)
+//           }
+           campaign.status()?.let { status ->
+               if (status == CampaignStatus.Accepted) {
+                   acceptedCampaigns.add(campaign)
+               } else {
+                   rejectedCampaigns.add(campaign)
+               }
+           }
+       }
+
+   }
+
+    val parentItems = mutableListOf<ParentItem>()
+
+    if (acceptedCampaigns.isNotEmpty()) {
+        parentItems.add(
+            ParentItem(
+                id = "accepted",
+                title = "Accepted",
+                campaigns = acceptedCampaigns,
+                status = CampaignStatus.Accepted
+            )
+        )
+    }
+
+    if (rejectedCampaigns.isNotEmpty()) {
+        parentItems.add(
+            ParentItem(
+                id = "rejected",
+                title = "Rejected",
+                campaigns = rejectedCampaigns,
+                status = CampaignStatus.Rejected
+            )
+        )
+    }
+
+    return parentItems
+}
+
 

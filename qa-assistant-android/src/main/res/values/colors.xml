@@ -29,4 +29,16 @@
     <color name="event_now">#00806C</color>
     <color name="event_clear">#B02F25</color>
     <color name="event_content_background">#F3F3F7</color>
+
+    <color name="header_bg">#E8E5F4</color>
+    <color name="campaign_detail_title_bg">#F5F5F5</color>
+    <color name="campaign_detail_status_bg">#E8F5E9</color>
+    <color name="info_message_bg">#B2EBF2</color>
+    <color name="info_icon">#00796B</color>
+    <color name="badge_bg">#E3F2FD</color>
+    <color name="variation_bg">#FAFAFA</color>
+    <color name="value_bg">#E8EAF6</color>
+    <color name="white_bg">#FCFCFD</color>
+    <color name="green_bg">#C7F4EE</color>
+    <color name="green_text">#00332B</color>
 </resources>

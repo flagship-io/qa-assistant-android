@@ -9,6 +9,8 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import com.abtasty.flagship.visitor.VisitorDelegateDTO
+import com.abtasty.qa_assistant_android.QAAssistant2
 import com.abtasty.qa_assistant_android.ui.components.JsonBox
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import org.json.JSONObject
@@ -26,7 +28,7 @@ data class Visitor(
 }
 
 @Composable
-fun ContextView(behavior: BottomSheetBehavior<*>, visitor: Visitor = Visitor()) {
+fun ContextView(behavior: BottomSheetBehavior<*>, visitor: VisitorDelegateDTO? = QAAssistant2.currentVisitor) {
     val scrollState = rememberScrollState()
 
     // Equivalent de canScrollBackward pour ScrollState
@@ -40,7 +42,7 @@ fun ContextView(behavior: BottomSheetBehavior<*>, visitor: Visitor = Visitor()) 
     }
 
     JsonBox(
-        visitor.content.toString(4),
+        visitor?.contextToJson()?.toString(4) ?: "{}",
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)

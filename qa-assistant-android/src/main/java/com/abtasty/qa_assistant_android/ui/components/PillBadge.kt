@@ -2,9 +2,11 @@ package com.abtasty.qa_assistant_android.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
@@ -25,7 +27,6 @@ fun PillBadge(label: String, modifier: Modifier, backgroundColor: Color, round: 
                 shape = RoundedCornerShape(round)
             )
             .padding(all = 8.dp)
-//            .weight(0.22f),
         ,
         style = TextStyle(
             fontWeight = FontWeight.SemiBold,

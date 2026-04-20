@@ -38,68 +38,71 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.abtasty.flagship.model.Campaign
+import com.abtasty.flagship.model.CampaignStatus
 import com.abtasty.qa_assistant_android.R
 import com.abtasty.qa_assistant_android.ui.components.CampaignListHeader
 import com.abtasty.qa_assistant_android.ui.components.CampaignListItem
 import com.abtasty.qa_assistant_android.ui.components.ResetAll
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
-sealed class Status(val title: String) {
-    object Accepted : Status("Accepted")
-    object Hidden : Status("Hidden")
-    object Rejected : Status("Rejected")
-    object TargetingRejected : Status("Targeting rejected")
-    object AllocationRejected : Status("Allocation rejected")
-    object Forced : Status("Forced")
-}
+//sealed class CampaignStatus(val title: String) {
+//    object Accepted : CampaignStatus("Accepted")
+//    object Hidden : CampaignStatus("Hidden")
+//    object Rejected : CampaignStatus("Rejected")
+//    object TargetingRejected : CampaignStatus("Targeting rejected")
+//    object AllocationRejected : CampaignStatus("Allocation rejected")
+//    object Forced : CampaignStatus("Forced")
+//}
 
-data class ChildItem(val id: String, val label: String, val details: String, val status: Status)
+//data class ChildItem(val id: String, val label: String, val details: String, val status: Status)
 data class ParentItem(
     val id: String,
     val title: String,
-    val children: List<ChildItem>,
-    val status: Status
+    val campaigns: List<Campaign>,
+    val status: CampaignStatus
 )
 
 @Composable
 fun CampaignsView(
     behavior: BottomSheetBehavior<*>,
-    parentItems: List<ParentItem> = listOf(
-        ParentItem(
-            "1", "Parent 1", listOf(
-                ChildItem("1", "Campaign 1", "Live 1", status = Status.Accepted),
-                ChildItem("2", "Campaign 2", "Live 2", status = Status.Hidden),
-                ChildItem("3", "Campaign 3", "Live 3", status = Status.Hidden),
-                ChildItem("4", "Campaign 3", "Live 4", status = Status.Accepted),
-                ChildItem("5", "Campaign 5", "Live 5", status = Status.Accepted),
-                ChildItem("6", "Campaign 6", "Live 6", status = Status.Forced),
-            ),
-            status = Status.Accepted
-        ),
-        ParentItem(
-            "2", "Parent 2", listOf(
-
-                ChildItem("7", "Campaign 7", "Live 7", status = Status.Rejected),
-                ChildItem("8", "Campaign 8", "Live 8", status = Status.Rejected),
-                ChildItem("9", "Campaign 9", "Live 9", status = Status.Rejected),
-                ChildItem(
-                    "10",
-                    "Home Page spring discount for NEW Visitors",
-                    "Live 10",
-                    status = Status.Forced
-                ),
-                ChildItem(
-                    "11",
-                    "Home Page spring discount for VIP Visitors",
-                    "Live 11",
-                    status = Status.AllocationRejected
-                ),
-                ChildItem("12", "Campaign 12", "Live 12", status = Status.TargetingRejected)
-            ),
-            status = Status.Rejected
-        )
-    ),
-    onChildClick: (parent: ParentItem, child: ChildItem) -> Unit,
+//    parentItems: List<ParentItem> = listOf(
+//        ParentItem(
+//            "1", "Parent 1", listOf(
+//                ChildItem("1", "Campaign 1", "Live 1", status = Status.Accepted),
+//                ChildItem("2", "Campaign 2", "Live 2", status = Status.Hidden),
+//                ChildItem("3", "Campaign 3", "Live 3", status = Status.Hidden),
+//                ChildItem("4", "Campaign 3", "Live 4", status = Status.Accepted),
+//                ChildItem("5", "Campaign 5", "Live 5", status = Status.Accepted),
+//                ChildItem("6", "Campaign 6", "Live 6", status = Status.Forced),
+//            ),
+//            status = Status.Accepted
+//        ),
+//        ParentItem(
+//            "2", "Parent 2", listOf(
+//
+//                ChildItem("7", "Campaign 7", "Live 7", status = Status.Rejected),
+//                ChildItem("8", "Campaign 8", "Live 8", status = Status.Rejected),
+//                ChildItem("9", "Campaign 9", "Live 9", status = Status.Rejected),
+//                ChildItem(
+//                    "10",
+//                    "Home Page spring discount for NEW Visitors",
+//                    "Live 10",
+//                    status = Status.Forced
+//                ),
+//                ChildItem(
+//                    "11",
+//                    "Home Page spring discount for VIP Visitors",
+//                    "Live 11",
+//                    status = Status.AllocationRejected
+//                ),
+//                ChildItem("12", "Campaign 12", "Live 12", status = Status.TargetingRejected)
+//            ),
+//            status = Status.Rejected
+//        )
+//    ),
+    parentItems: List<ParentItem> = emptyList(),
+    onChildClick: (parent: ParentItem, campaign: Campaign) -> Unit,
     modifier: Modifier = Modifier
 ) {
 
@@ -126,7 +129,8 @@ fun CampaignsView(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BasicText("X live campaigns", modifier = Modifier.weight(1f))
+            val totalCampaigns = parentItems.sumOf { it.campaigns.size }
+            BasicText("$totalCampaigns live campaigns", modifier = Modifier.weight(1f))
             ResetAll(
                 "Reset all",
                 ImageVector.vectorResource(R.drawable.icon_reset),
@@ -149,6 +153,7 @@ fun CampaignsView(
                 .weight(1f)
         ) {
             parentItems.forEach { parent ->
+                println("parent ${parent.id + " " + parent.status.title}")
                 item(key = "parent_${parent.id}") {
                     CampaignListHeader(
                         parent,
@@ -172,10 +177,10 @@ fun CampaignsView(
                             modifier = Modifier
                                 .fillMaxWidth()
                         ) {
-                            parent.children.forEach { child ->
+                            parent.campaigns.forEach { campaign: Campaign ->
                                 CampaignListItem (
-                                    child = child,
-                                    onClick = { onChildClick(parent, child) }
+                                    campaign = campaign,
+                                    onClick = { onChildClick(parent, campaign) }
                                 )
                             }
                         }

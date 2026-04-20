@@ -8,10 +8,16 @@ import java.lang.ref.WeakReference
 import java.net.HttpURLConnection
 import java.net.URL
 import androidx.core.content.edit
+import com.abtasty.flagship.model.CampaignStatus
 import com.abtasty.flagship.utils.FlagshipConstants
 import com.abtasty.flagship.utils.FlagshipLogManager
 import com.abtasty.flagship.utils.LogManager
+import com.abtasty.flagship.visitor.VisitorDelegateDTO
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONObject
+import java.util.Currency
 
 class CampaignManager {
 
@@ -37,10 +43,18 @@ class CampaignManager {
 
     private var prefs: SharedPreferences? = null
 
-    private var campaigns: ArrayList<Campaign>? = null
+    //    private var campaigns: ArrayList<Campaign>? = null
+    private val _campaigns = MutableStateFlow<ArrayList<Campaign>?>(null)
+    val campaigns: StateFlow<ArrayList<Campaign>?> = _campaigns.asStateFlow()
 
-    suspend fun parseBucketingFile(envId: String) {
-        try {
+    var currentVisitor: VisitorDelegateDTO? = null
+
+
+    suspend fun getBucketingCampaigns(
+        envId: String,
+        currentVisitor: VisitorDelegateDTO
+    ): ArrayList<Campaign>? {
+        return try {
             val url = BUCKETING_BASE_URL.format(envId)
             val response = sendBucketingFileHttpRequest(url)
 
@@ -48,20 +62,26 @@ class CampaignManager {
                 HttpURLConnection.HTTP_OK -> { // 200
                     println("[QA ASSISTANT] Campaigns downloaded successfully")
                     response.body?.let { jsonBody ->
-                        campaigns = parseCampaigns(jsonBody)
+//                        campaigns = parseCampaigns(jsonBody)
+                        val newCampaigns = parseCampaigns(jsonBody)
                         saveCacheHeaders(response.lastModified)
                         saveCachedCampaigns(jsonBody)
-                        campaigns
+//                        _campaigns.value = newCampaigns
+                        println("newCampaigns = " + newCampaigns)
+//                        _campaigns.value = newCampaigns
+                        newCampaigns
                     }
                 }
 
                 HttpURLConnection.HTTP_NOT_MODIFIED -> { // 304
                     println("[QA ASSISTANT] Campaigns not modified, using cached version")
-                    campaigns = loadCachedCampaigns()
-                    campaigns
-
+//                    campaigns = loadCachedCampaigns()
+//                    _campaigns.value = loadCachedCampaigns()
+                    val newCampaigns = loadCachedCampaigns()
+                    println("newCampaigns = " + newCampaigns)
+//                    _campaigns.value = newCampaigns
+                    newCampaigns
                 }
-
                 else -> {
                     println("[QA ASSISTANT] Error fetching campaigns: ${response?.code}")
                     null
@@ -183,12 +203,37 @@ class CampaignManager {
         return null
     }
 
-    suspend fun updateCampaigns(context: Context, envId: String): ArrayList<Campaign>? {
+    //    suspend fun updateCampaigns(context: Context, envId: String): ArrayList<Campaign>? {
+    suspend fun updateCampaigns(
+        context: Context,
+        envId: String,
+        visitorDelegateDTO: VisitorDelegateDTO,
+        visitorCampaigns: List<Campaign>? = null
+    ) {
         refContext = WeakReference(context)
+        currentVisitor = visitorDelegateDTO
         initPreferences()
-        parseBucketingFile(envId)
-        return campaigns
+        val campaigns = getBucketingCampaigns(envId, visitorDelegateDTO)
+        evaluateCampaigns(campaigns, visitorCampaigns)
+        _campaigns.value = campaigns
+        campaigns?.forEach { campaign ->
+            System.out.println("#Det23 QACampaign : " + campaign.campaignMetadata.campaignName + " = " + campaign.status()?.title)
+
+        }
+//        return campaigns
     }
 
+    suspend fun evaluateCampaigns(campaigns: ArrayList<Campaign>?, visitorCampaigns: List<Campaign>? = null) {
+        if (campaigns != null && visitorCampaigns != null) {
+            campaigns.forEach { campaign ->
+                campaign.status(CampaignStatus.Rejected)
+                visitorCampaigns.forEach { visitorCampaign ->
+                    if (campaign.campaignMetadata.campaignId == visitorCampaign.campaignMetadata.campaignId) {
+                        campaign.status(visitorCampaign.status() ?: CampaignStatus.Rejected)
+                    }
+                }
+            }
 
+        }
+    }
 }

@@ -1,6 +1,8 @@
 package com.abtasty.qa_assistant_android
 
-import org.json.JSONObject
+import com.abtasty.flagship.hits.Hit
+import com.abtasty.flagship.model.Campaign
+import com.abtasty.flagship.visitor.VisitorDelegateDTO
 
 //interface IQAAssistant {
 //
@@ -11,13 +13,10 @@ import org.json.JSONObject
 //}
 
 interface IQAAssistant2 {
-    fun initialize(): IQAAssistant2? {
-        return null
-    }
-    fun open()
+    fun open(): IQAAssistant2 { return this }
     fun close()
 
-    fun onVisitorChanged(jsonVisitor: JSONObject) {}
-    fun onHitEmitted(jsonHit: JSONObject) {}
-    fun onFlagsUpdated(flags: JSONObject) {}
+    fun onVisitorChanged(visitorDelegateDTO: VisitorDelegateDTO, campaigns: List<Campaign>? = null)
+    fun onHitEmitted(hit: Hit.HitDTO)
+//    fun onFlagsUpdated(flags: JSONObject) {}
 }

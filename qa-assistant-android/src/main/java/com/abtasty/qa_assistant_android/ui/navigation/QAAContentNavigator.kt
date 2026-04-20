@@ -1,19 +1,30 @@
 package com.abtasty.qa_assistant_android.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.abtasty.flagship.model.Campaign
+import com.abtasty.qa_assistant_android.ui.screens.CampaignDetailScreen
 import com.abtasty.qa_assistant_android.ui.screens.HomeScreen
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
-private sealed interface Screen {
+sealed interface Screen {
     data object Home : Screen
-    data class Detail(val campaignId: String) : Screen
+    data class Detail(val campaign: Campaign) : Screen
 }
 
+internal var savedScreen: Screen? = null
+
 @Composable
-fun QAAContentNavigator(behavior: BottomSheetBehavior<*>, onClose: () -> Unit) {
-    var screen = remember { mutableStateOf<Screen>(Screen.Home) }.value
+fun QAAContentNavigator(
+    behavior: BottomSheetBehavior<*>,
+    onClose: () -> Unit
+) {
+    var screen by remember { mutableStateOf<Screen>(savedScreen ?: Screen.Home) }
+
+    savedScreen = screen
 
     androidx.activity.compose.BackHandler {
         when (screen) {
@@ -23,15 +34,19 @@ fun QAAContentNavigator(behavior: BottomSheetBehavior<*>, onClose: () -> Unit) {
     }
 
     when (val s = screen) {
-        Screen.Home -> HomeScreen(
+        is Screen.Home -> HomeScreen(
             behavior = behavior,
-            onCampaignClick = { id -> screen = Screen.Detail(id) },
+            onCampaignClick = { campaign ->
+                println("QA DETAILS CLICKED: $campaign.id")
+                screen = Screen.Detail(campaign) },
             onClose = onClose
         )
-//        is Screen.Detail -> CampaignDetailScreen(
-//            campaignId = s.campaignId,
-//            onBack = { screen = Screen.Home }
-//        )
+        is Screen.Detail -> CampaignDetailScreen(
+            campaign = s.campaign,
+            onCampaignStatusChanged = {campaign, status -> },
+            onBack = { screen = Screen.Home },
+            onClose = onClose
+        )
         else -> {
             screen = Screen.Home
         }

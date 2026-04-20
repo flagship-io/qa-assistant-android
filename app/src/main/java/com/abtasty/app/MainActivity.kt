@@ -10,7 +10,11 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.abtasty.app.databinding.ActivityMainBinding
+import com.abtasty.flagship.hits.Event
+import com.abtasty.flagship.hits.Hit
+import com.abtasty.flagship.hits.Item
 import com.abtasty.flagship.hits.Screen
+import com.abtasty.flagship.hits.Transaction
 import com.abtasty.flagship.main.Flagship
 import com.abtasty.flagship.main.FlagshipConfig
 //import com.abtasty.qa_assistant_android.QAAssistant
@@ -27,6 +31,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        println("#QA ASSISTANT COLLECTER APP ON CREATE")
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -41,7 +46,36 @@ class MainActivity : AppCompatActivity() {
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                 .setAction("Action", null)
                 .setAnchorView(R.id.fab).show()
+
+            val hits = arrayListOf<Hit<*>?>(
+                null,
+                Screen("Screen B " + System.currentTimeMillis()),
+                Item("Item B ", "Product name", "System.currentTimeMillis()"),
+                Transaction("Transaction B", "${System.currentTimeMillis()}")
+            )
+            hits.random()?.let {  Flagship.getVisitor()?.sendHit(it) }
+            val event = Event(Event.EventCategory.ACTION_TRACKING, "Click")
+            Flagship.getVisitor()?.sendHit(event)
         }
+
+        Flagship.start(application, "bkk4s7gcmjcg07fke9dg", "Q6FDmj6F188nh75lhEato2MwoyXDS7y34VrAL4Aa", FlagshipConfig.Bucketing())
+//        Flagship.start(application, "bkk4s7gcmjcg07fke9dg", "Q6FDmj6F188nh75lhEato2MwoyXDS7y34VrAL4Aa", FlagshipConfig.DecisionApi())
+            .invokeOnCompletion {
+                QAAssistant2.open(this, "bkk4s7gcmjcg07fke9dg")
+                println("[APP] FLAGSHIP STARTED")
+                println("#QA CORE COLLECTER FLAGSHIP STARTED")
+                println("#QA CORE COLLECTER VISITOR CREATED")
+                val visitor = Flagship.newVisitor("visitorId8937", true).build()
+                visitor.fetchFlags().invokeOnCompletion {
+                    println("#QA CORE COLLECTER FLAGSHIP FETCHED")
+                    println("[APP] FETCHED FLAGS")
+                }
+                runBlocking {
+                    println("#QA COLLECTER SEND HIT")
+                    delay(2000)
+                    visitor.sendHit(Screen("AAAAAAAAAAAA " + System.currentTimeMillis()))
+                }
+            }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -68,19 +102,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        Flagship.start(application, "bkk4s7gcmjcg07fke9dg", "Q6FDmj6F188nh75lhEato2MwoyXDS7y34VrAL4Aa", FlagshipConfig.DecisionApi())
-            .invokeOnCompletion {
-                println("[APP] FLAGSHIP STARTED")
-                val visitor = Flagship.newVisitor("visitorId8937", true).build()
-                QAAssistant2.open(this, "bkk4s7gcmjcg07fke9dg")
-                visitor.fetchFlags().invokeOnCompletion {
-                    println("[APP] FETCHED FLAGS")
-                }
-                runBlocking {
-                    println("#QA SEND HIT")
-                    delay(2000)
-                    visitor.sendHit(Screen("AAAAAAAAAAAA"))
-                }
-            }
+
     }
 }

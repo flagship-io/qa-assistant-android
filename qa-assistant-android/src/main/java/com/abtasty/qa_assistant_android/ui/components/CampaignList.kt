@@ -26,10 +26,11 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.abtasty.flagship.model.Campaign
+import com.abtasty.flagship.model.CampaignStatus
 import com.abtasty.qa_assistant_android.R
-import com.abtasty.qa_assistant_android.ui.screens.ChildItem
 import com.abtasty.qa_assistant_android.ui.screens.ParentItem
-import com.abtasty.qa_assistant_android.ui.screens.Status
+//import com.abtasty.qa_assistant_android.ui.screens.Status
 
 
 @Composable
@@ -62,11 +63,11 @@ fun CampaignListHeader(
                     R.drawable.icon_caret_down
                 )
             val color = when (parentItem.status) {
-                Status.Accepted -> colorResource(R.color.accepted)
+                CampaignStatus.Accepted -> colorResource(R.color.accepted)
                 else -> colorResource(R.color.rejected)
             }
             val statusTitle = when (parentItem.status) {
-                Status.Accepted -> "Accepted"
+                CampaignStatus.Accepted -> "Accepted"
                 else -> "Rejected"
             }
             Icon(
@@ -87,7 +88,7 @@ fun CampaignListHeader(
                 backgroundColor = color
             )
             BasicText(
-                "${parentItem.children.size} campaigns",
+                "${parentItem.campaigns.size} campaigns",
                 modifier = Modifier
                     .padding(start = 8.dp)
                     .weight(0.67f)
@@ -109,17 +110,19 @@ fun CampaignListHeader(
 
 
 @Composable
-fun CampaignListItem(child: ChildItem, onClick: () -> Unit) {
-    val color = when (child.status) {
-        Status.Accepted -> colorResource(R.color.accepted)
-        Status.Forced -> colorResource(R.color.forced)
-        Status.Hidden -> colorResource(R.color.forced)
+fun CampaignListItem(campaign: Campaign, onClick: () -> Unit) {
+    println("QA CampaignStatus = " + campaign.status())
+    println("#Det CampaignStatus = " + campaign.status()?.title)
+    val color = when (campaign.status()) {
+        CampaignStatus.Accepted -> colorResource(R.color.accepted)
+        CampaignStatus.Forced -> colorResource(R.color.forced)
+        CampaignStatus.Hidden -> colorResource(R.color.forced)
         else -> colorResource(R.color.rejected)
     }
-    val statusTitle = when (child.status) {
-        Status.AllocationRejected -> Status.Rejected.title
-        Status.TargetingRejected -> Status.Rejected.title
-        else -> child.status.title
+    val statusTitle = when (campaign.status()) {
+        CampaignStatus.AllocationRejected -> CampaignStatus.Rejected.title
+        CampaignStatus.TargetingRejected -> CampaignStatus.Rejected.title
+        else -> campaign.status()?.title ?: CampaignStatus.Rejected.title
     }
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -150,7 +153,7 @@ fun CampaignListItem(child: ChildItem, onClick: () -> Unit) {
                         repeatDelayMillis = 3000,
                         velocity = 40.dp
                     ),
-                text = child.label,
+                text = campaign.campaignMetadata.campaignName,
                 style = TextStyle(
                     color = colorResource(R.color.text_bold),
                     fontSize = 18.sp,
@@ -158,7 +161,7 @@ fun CampaignListItem(child: ChildItem, onClick: () -> Unit) {
                 maxLines = 1
             )
             BasicText(
-                text = child.details,
+                text = campaign.campaignMetadata.campaignType,
                 style = TextStyle(
                     color = colorResource(R.color.text_light_grey),
                     fontSize = 16.sp

@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.Icon
@@ -37,13 +36,13 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.abtasty.flagship.hits.Hit
 import com.abtasty.qa_assistant_android.R
-import com.abtasty.qa_assistant_android.ui.screens.Event
 import com.abtasty.qa_assistant_android.ui.screens.timeAgo
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 @Composable
-fun EventExpandableList(eventList: List<Event>, behavior: BottomSheetBehavior<*>) {
+fun EventExpandableList(hits: ArrayList<Hit.HitDTO>, behavior: BottomSheetBehavior<*>) {
 
     val lazyListState = rememberLazyListState()
 
@@ -64,18 +63,21 @@ fun EventExpandableList(eventList: List<Event>, behavior: BottomSheetBehavior<*>
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(bottom = 8.dp)
     ) {
-        items(eventList.size, key = { eventList[it].id }) { item ->
-            EventExpandableRow(event = eventList[item])
+        items(
+            count = hits.size,
+            key = { index -> "${hits[index].id}_$index" }
+        ) { item ->
+            EventExpandableRow(hit = hits[item])
         }
     }
 }
 
 @Composable
-fun EventExpandableRow(event: Event) {
+fun EventExpandableRow(hit: Hit.HitDTO) {
 
-    var expanded by rememberSaveable(event.id) { mutableStateOf(false) }
+    var expanded by rememberSaveable(hit.id) { mutableStateOf(false) }
 
-    val timeString = timeAgo(event.timestamp)
+    val timeString = timeAgo(hit.timestamp)
     val timeColor =
         colorResource(if (timeString.contains("Just now")) R.color.event_now else R.color.text_light_grey)
     val iconResource =
@@ -106,9 +108,9 @@ fun EventExpandableRow(event: Event) {
         ) {
 
             PillBadge(
-                label = event.type,
+                label = hit.type.toString(),
                 modifier = Modifier
-                    .weight(0.4f)
+                    .weight(0.45f)
                 ,
                 backgroundColor = colorResource(R.color.event_type_background)
             )
@@ -140,7 +142,7 @@ fun EventExpandableRow(event: Event) {
         ) {
             Column(
             ) {
-                JsonBox(event.content.toString(4))
+                JsonBox(hit.data.toString(4))
             }
         }
     }

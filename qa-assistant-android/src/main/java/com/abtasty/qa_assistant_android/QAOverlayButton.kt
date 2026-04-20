@@ -299,9 +299,11 @@ class QAOverlayButton(application: Application) {
     private fun showQABottomSheet(activity: Activity) {
         if (!dialogDisplayed) {
 
-            val dialog = QAADialog(activity, onClose = {
-                dialogDisplayed = false
-            })
+            val dialog = QAADialog(
+                activity, onClose = {
+                    dialogDisplayed = false
+                }
+            )
 
             dialog.setOnCancelListener { dialogDisplayed = false }
             dialog.setOnDismissListener { dialogDisplayed = false }
