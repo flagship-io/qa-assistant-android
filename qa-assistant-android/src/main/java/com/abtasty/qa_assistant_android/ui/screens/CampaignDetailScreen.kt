@@ -38,17 +38,26 @@ import com.abtasty.qa_assistant_android.R
 import com.abtasty.qa_assistant_android.ui.components.Header
 import com.abtasty.qa_assistant_android.ui.components.PillBadge
 import com.abtasty.qa_assistant_android.ui.components.QABadge
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.coroutines.launch
 
-
-private enum class CampaignTab(val label: String) {
+private interface Tab {
+    val label: String
+}
+private enum class CampaignTab(override val label: String): Tab {
     Variations("Variations"),
     Targeting("Targeting"),
     Allocation("Allocation")
 }
 
+private enum class ToggleTab(override val label: String): Tab {
+    Variations("Variations"),
+    Targeting("Targeting"),
+}
+
 @Composable
 fun CampaignDetailScreen(
+    behavior: BottomSheetBehavior<*>,
     campaign: Campaign,
     onCampaignStatusChanged: (Campaign, CampaignStatus) -> Unit,
     onBack: () -> Unit,
@@ -57,6 +66,7 @@ fun CampaignDetailScreen(
 ) {
 
     println("#Det dtail campaign ${campaign.campaignMetadata.campaignName} + status = " + campaign.status()?.title)
+    println("#Var campaign = " + campaign)
     Column(
 
         modifier = Modifier
@@ -149,7 +159,7 @@ fun CampaignDetailScreen(
                                     )
                                 }
                             }
-                            if (campaign.status() == CampaignStatus.Accepted) {
+                            if (campaign.status() == CampaignStatus.Accepted || campaign.status() == CampaignStatus.Forced) {
                                 Column (
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -158,21 +168,22 @@ fun CampaignDetailScreen(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
-                                        text = "You are viewing: xxx",
+                                        text = "You are viewing: ${campaign.getSelectedVariation()?.variationMetadata?.variationName}",
                                         color = colorResource(R.color.green_text),
                                         fontSize = 16.sp,
-                                        fontWeight = FontWeight.Normal,
+                                        fontWeight = FontWeight.SemiBold,
                                         modifier = Modifier
                                             .background(color = colorResource(R.color.green_bg))
-                                            .fillMaxWidth(),
+                                            .fillMaxWidth()
+                                            .padding(8.dp),
                                         textAlign = TextAlign.Center,
                                     )
-                                    Spacer(modifier = Modifier.height(18.dp))
+                                    Spacer(modifier = Modifier.height(12.dp))
                                 }
 
                             }
 
-                            val tabs = CampaignTab.entries
+                            val tabs = if (campaign.campaignMetadata.campaignType == "toggle") ToggleTab.entries else CampaignTab.entries
                             val pagerState = rememberPagerState(pageCount = { tabs.size })
                             val scope = rememberCoroutineScope()
 
@@ -217,16 +228,30 @@ fun CampaignDetailScreen(
                                     .fillMaxWidth()
                                     .background(Color.White)
                             ) { page ->
+                                val tabLabel = tabs[page].label
+                                when (tabLabel) {
+                                    "Variations" -> VariationView(
+                                        behavior = behavior,
+                                        campaign = campaign,
+                                        onVariationSwitched = { campaign, variation ->
 
-//                                when (tabs[page]) {
-//                                    HomeTab.Campaigns -> CampaignsView(
-//                                        behavior = behavior,
-//                                        parentItems = parentItems,
-//                                        onChildClick = { parent, child -> onCampaignClick(child) }
-//                                    )
-//                                    HomeTab.Events -> EventsView(behavior = behavior)
-//                                    HomeTab.Context -> ContextView(behavior = behavior)
-//                                }
+                                        }
+                                    )
+                                    "Targeting" -> TargetingView(
+                                        behavior = behavior,
+                                        campaign = campaign,
+                                        onBack = {
+
+                                        }
+                                    )
+                                    "Allocation" ->  AllocationView(
+                                        behavior = behavior,
+                                        campaign = campaign,
+                                        onBack = {
+
+                                        },
+                                    )
+                                }
                             }
                         }
                     }

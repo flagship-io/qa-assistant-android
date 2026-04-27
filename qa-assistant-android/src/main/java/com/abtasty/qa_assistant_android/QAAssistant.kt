@@ -165,6 +165,9 @@ object QAAssistant2 : IQAAssistant2, LifecycleEventObserver {
                 campaignManager.updateCampaigns(it, envID!!, visitorDelegateDTO, campaigns)
             }
             println("[QA ASSISTANT] Campaigns updated : $campaignsUpdated")
+            for (c in campaigns!!) {
+                println("#Var Campaign : " + c.toString())
+            }
         }
     }
 

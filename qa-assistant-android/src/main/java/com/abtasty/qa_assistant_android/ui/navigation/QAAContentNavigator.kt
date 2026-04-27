@@ -42,6 +42,7 @@ fun QAAContentNavigator(
             onClose = onClose
         )
         is Screen.Detail -> CampaignDetailScreen(
+            behavior = behavior,
             campaign = s.campaign,
             onCampaignStatusChanged = {campaign, status -> },
             onBack = { screen = Screen.Home },

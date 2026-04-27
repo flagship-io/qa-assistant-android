@@ -82,6 +82,7 @@ class CampaignManager {
 //                    _campaigns.value = newCampaigns
                     newCampaigns
                 }
+
                 else -> {
                     println("[QA ASSISTANT] Error fetching campaigns: ${response?.code}")
                     null
@@ -223,13 +224,18 @@ class CampaignManager {
 //        return campaigns
     }
 
-    suspend fun evaluateCampaigns(campaigns: ArrayList<Campaign>?, visitorCampaigns: List<Campaign>? = null) {
+    suspend fun evaluateCampaigns(
+        campaigns: ArrayList<Campaign>?,
+        visitorCampaigns: List<Campaign>? = null
+    ) {
         if (campaigns != null && visitorCampaigns != null) {
             campaigns.forEach { campaign ->
                 campaign.status(CampaignStatus.Rejected)
                 visitorCampaigns.forEach { visitorCampaign ->
                     if (campaign.campaignMetadata.campaignId == visitorCampaign.campaignMetadata.campaignId) {
                         campaign.status(visitorCampaign.status() ?: CampaignStatus.Rejected)
+                        campaign.selectedVariationId = visitorCampaign.selectedVariationId
+                        System.out.println("#Sel ${campaign.status()?.title} variation id : " + campaign.selectedVariationId)
                     }
                 }
             }

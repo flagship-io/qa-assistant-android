@@ -2,6 +2,7 @@ package com.abtasty.qa_assistant_android.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -23,28 +24,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.abtasty.flagship.model.CampaignStatus
+import com.abtasty.flagship.model.Variation
 import com.abtasty.qa_assistant_android.R
 
 @Composable
-fun QABadge(
-    campaignStatus: CampaignStatus,
+fun VariationViewBadge(
+    variation: Variation,
     modifier: Modifier,
-    onClick: (CampaignStatus, CampaignStatus) -> Unit,
+    onClick: (Variation) -> Unit,
     round: Int = 10
 ) {
-
-    val label = when (campaignStatus) {
-        CampaignStatus.Accepted -> "Hide"
-        CampaignStatus.Rejected, CampaignStatus.AllocationRejected, CampaignStatus.TargetingRejected -> "Force display"
-        CampaignStatus.Hidden, CampaignStatus.Forced -> "Initial State"
-    }
-
-    val icon = when (campaignStatus) {
-        CampaignStatus.Accepted -> R.drawable.hide
-        CampaignStatus.Rejected, CampaignStatus.AllocationRejected, CampaignStatus.TargetingRejected -> R.drawable.force_display
-        CampaignStatus.Hidden, CampaignStatus.Forced -> R.drawable.icon_reset
-    }
-
     Row(
         modifier = modifier
             .background(
@@ -56,21 +45,16 @@ fun QABadge(
                 color = colorResource(R.color.cell_border),
                 shape = RoundedCornerShape(round)
             )
-
-            .padding(all = 8.dp),
-        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            .padding(all = 8.dp)
+            .clickable {
+                onClick(variation)
+            },
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            imageVector = ImageVector.vectorResource(icon),
-            contentDescription = null,
-            tint = colorResource(R.color.cell_border),
-            modifier = Modifier.clip(RectangleShape)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
         BasicText(
-            text = label,
+            text = "View",
             modifier = Modifier
-                .padding(end = 4.dp)
+//                .padding(end = 4.dp)
             ,
             style = TextStyle(
                 fontWeight = FontWeight.SemiBold,
@@ -78,7 +62,6 @@ fun QABadge(
                 textAlign = TextAlign.Center
             ),
             maxLines = 1,
-
         )
     }
 }
