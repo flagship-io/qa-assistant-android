@@ -53,19 +53,32 @@ class MainActivity : AppCompatActivity() {
                 Item("Item B ", "Product name", "System.currentTimeMillis()"),
                 Transaction("Transaction B", "${System.currentTimeMillis()}")
             )
-            hits.random()?.let {  Flagship.getVisitor()?.sendHit(it) }
+            hits.random()?.let { Flagship.getVisitor()?.sendHit(it) }
             val event = Event(Event.EventCategory.ACTION_TRACKING, "Click")
             Flagship.getVisitor()?.sendHit(event)
         }
 
-        Flagship.start(application, "bkk4s7gcmjcg07fke9dg", "Q6FDmj6F188nh75lhEato2MwoyXDS7y34VrAL4Aa", FlagshipConfig.Bucketing())
+        Flagship.start(
+            application,
+            "bkk4s7gcmjcg07fke9dg",
+            "Q6FDmj6F188nh75lhEato2MwoyXDS7y34VrAL4Aa",
+            FlagshipConfig.Bucketing()
+        )
 //        Flagship.start(application, "bkk4s7gcmjcg07fke9dg", "Q6FDmj6F188nh75lhEato2MwoyXDS7y34VrAL4Aa", FlagshipConfig.DecisionApi())
             .invokeOnCompletion {
                 QAAssistant2.open(this, "bkk4s7gcmjcg07fke9dg")
                 println("[APP] FLAGSHIP STARTED")
                 println("#QA CORE COLLECTER FLAGSHIP STARTED")
                 println("#QA CORE COLLECTER VISITOR CREATED")
-                val visitor = Flagship.newVisitor("visitorId8937", true).build()
+                val visitor = Flagship.newVisitor("visitorId8937", true)
+                    .context(
+                        hashMapOf(
+                            "fs_is_vip" to "vip",
+                            "Persona1" to "deux",
+                            "case" to 3
+                        )
+                    )
+                    .build()
                 visitor.fetchFlags().invokeOnCompletion {
                     println("#QA CORE COLLECTER FLAGSHIP FETCHED")
                     println("[APP] FETCHED FLAGS")

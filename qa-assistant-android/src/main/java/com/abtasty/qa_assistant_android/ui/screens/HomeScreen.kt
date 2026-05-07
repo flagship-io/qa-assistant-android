@@ -51,43 +51,41 @@ import com.abtasty.qa_assistant_android.CampaignManager
 import com.abtasty.qa_assistant_android.QAAssistant2
 import com.abtasty.qa_assistant_android.R
 import com.abtasty.qa_assistant_android.ui.components.Header
+import com.abtasty.qa_assistant_android.ui.navigation.savedExpandedIds
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-//data class Campaign(
-//    val id: String,
-//    val name: String,
-//    val status: String
-//)
 
 private enum class HomeTab(val label: String) {
     Campaigns("Campaigns"),
     Events("Events"),
-    Context("Context")
+    Context("Context");
+
+    companion object {
+//        fun fromString(tab: String): HomeTab = entries.find { it.label == tab } ?: Campaigns
+
+        fun fromInt(tab: Int): HomeTab = entries.find { it.ordinal == tab } ?: Campaigns
+    }
 }
+
+internal var savedTab : Int = 0
+
 
 @Composable
 fun HomeScreen(
     behavior: BottomSheetBehavior<*>,
     onCampaignClick: (Campaign) -> Unit,
     onClose: () -> Unit,
-//    viewModel: HomeViewModel = viewModel()
-//    viewModel: HomeViewModel = remember { HomeViewModel() }
-    campaignManager: CampaignManager = QAAssistant2.campaignManager
-) {
-//    val campaigns = remember {
-//        listOf(
-//            Campaign("1", "Spring Sale", "Running"),
-//            Campaign("2", "Black Friday", "Paused"),
-//            Campaign("3", "Homepage Test", "Running")
-//        )
-//    }
+    campaignManager: CampaignManager = QAAssistant2.campaignManager,
+    expandedIds: List<String> = emptyList(),
+    onExpandedChange: (String) -> Unit = {}
 
-//    val parentItems by viewModel.parentItems.collectAsState()
-//    val parentItems by campaignManager.campaigns
-//        .map { campaigns -> convertCampaignsToParentItems(campaigns ?: emptyList()) }
-//        .collectAsState(initial = emptyList())
+) {
+
+    var homeTab by rememberSaveable { mutableStateOf(savedTab) }
+
+    savedTab = homeTab
 
     val campaigns by campaignManager.campaigns.collectAsState()
 
@@ -98,8 +96,6 @@ fun HomeScreen(
     println("[QA ASSISTANT] HomeScreen recomposing with ${parentItems.size} parent items")
 
     var query by rememberSaveable { mutableStateOf("") }
-    var tab = rememberSaveable { mutableStateOf(HomeTab.Campaigns) }.value
-    var selectedCampaign = remember { mutableStateOf<Campaign?>(null) }.value
 
     Column (
 
@@ -185,7 +181,7 @@ fun HomeScreen(
                     Spacer(Modifier.height(16.dp))
 
                     val tabs = HomeTab.entries
-                    val pagerState = rememberPagerState(pageCount = { tabs.size })
+                    val pagerState = rememberPagerState(initialPage = homeTab, pageCount = { tabs.size })
                     val scope = rememberCoroutineScope()
 
                     val selectedColor = colorResource(R.color.selected_tab)
@@ -194,6 +190,7 @@ fun HomeScreen(
                     Column(modifier = Modifier.fillMaxWidth()) {
                         SecondaryTabRow(
                             selectedTabIndex = pagerState.currentPage,
+//                            selectedTabIndex = homeTab,
                             containerColor = Color.Transparent,
                             contentColor = selectedColor,
                             indicator = {
@@ -212,8 +209,9 @@ fun HomeScreen(
                                         selected = pagerState.currentPage == index,
                                         onClick = {
                                             scope.launch {
-                                                pagerState.animateScrollToPage(index)
+                                                pagerState.scrollToPage(index)
                                             }
+                                            homeTab = index
                                         },
                                         selectedContentColor = selectedColor,
                                         unselectedContentColor = unselectedColor,
@@ -229,12 +227,13 @@ fun HomeScreen(
                             .fillMaxWidth()
                             .background(Color.White)
                     ) { page ->
-
                         when (tabs[page]) {
                             HomeTab.Campaigns -> CampaignsView(
                                 behavior = behavior,
                                 parentItems = parentItems,
-                                onChildClick = { parent, child -> onCampaignClick(child) }
+                                onChildClick = { parent, child -> onCampaignClick(child) },
+                                expandedIds = expandedIds.toSet(),
+                                onExpandedChange = onExpandedChange
                             )
                             HomeTab.Events -> EventsView(behavior = behavior)
                             HomeTab.Context -> ContextView(behavior = behavior)

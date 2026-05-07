@@ -4,52 +4,65 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.abtasty.flagship.model.Campaign
+import com.abtasty.qa_assistant_android.QAAssistant2
 import com.abtasty.qa_assistant_android.ui.screens.CampaignDetailScreen
 import com.abtasty.qa_assistant_android.ui.screens.HomeScreen
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import kotlinx.coroutines.flow.first
 
-sealed interface Screen {
-    data object Home : Screen
-    data class Detail(val campaign: Campaign) : Screen
-}
-
-internal var savedScreen: Screen? = null
-
+internal var savedExpandedIds: List<String> = emptyList()
+internal var savedCampaignDetailId : String? = null
 @Composable
 fun QAAContentNavigator(
     behavior: BottomSheetBehavior<*>,
     onClose: () -> Unit
 ) {
-    var screen by remember { mutableStateOf<Screen>(savedScreen ?: Screen.Home) }
+    var expandedIdsList by rememberSaveable { mutableStateOf(savedExpandedIds) }
+    val campaignDetailId = rememberSaveable { mutableStateOf<String?>(savedCampaignDetailId) }
 
-    savedScreen = screen
+    savedExpandedIds = expandedIdsList
+    savedCampaignDetailId = campaignDetailId.value
 
     androidx.activity.compose.BackHandler {
-        when (screen) {
-            Screen.Home -> onClose()
-            is Screen.Detail -> screen = Screen.Home
+        when (campaignDetailId.value) {
+            null -> {
+                onClose()
+            }
+            else -> {
+                campaignDetailId.value = null
+            }
         }
     }
 
-    when (val s = screen) {
-        is Screen.Home -> HomeScreen(
+    when  {
+        (campaignDetailId.value != null) -> CampaignDetailScreen(
+            behavior = behavior,
+            campaign = campaignDetailId.let { id ->
+                QAAssistant2.campaignManager.campaigns.value?.find { it.campaignMetadata.campaignId == id.value }
+            }!!,
+            onCampaignStatusChanged = { campaign, status -> },
+            onBack = {
+                campaignDetailId.value = null
+            },
+            onClose = onClose
+        )
+        else -> HomeScreen(
             behavior = behavior,
             onCampaignClick = { campaign ->
-                println("QA DETAILS CLICKED: $campaign.id")
-                screen = Screen.Detail(campaign) },
-            onClose = onClose
+                campaignDetailId.value = campaign.campaignMetadata.campaignId
+            },
+            onClose = onClose,
+            expandedIds = expandedIdsList,
+            onExpandedChange = { parentId ->
+                expandedIdsList = if (parentId in expandedIdsList) {
+                    expandedIdsList.filterNot { it == parentId }
+                } else {
+                    expandedIdsList + parentId
+                }
+            }
         )
-        is Screen.Detail -> CampaignDetailScreen(
-            behavior = behavior,
-            campaign = s.campaign,
-            onCampaignStatusChanged = {campaign, status -> },
-            onBack = { screen = Screen.Home },
-            onClose = onClose
-        )
-        else -> {
-            screen = Screen.Home
-        }
     }
 }

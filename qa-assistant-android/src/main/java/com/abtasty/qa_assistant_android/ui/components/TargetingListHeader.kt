@@ -32,10 +32,9 @@ import com.abtasty.qa_assistant_android.ui.screens.VariationView
 
 @Composable
 fun TargetingListHeader(
-    variationGroup: VariationGroup,
+    variationGroupName: String,
     expanded: Boolean,
-    onClick: () -> Unit,
-    isLast: Boolean = false
+    onClick: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -61,10 +60,9 @@ fun TargetingListHeader(
                         end = 8.dp
                     )
             )
-            val title = variationGroup.variationGroupMetadata.variationGroupName
 
             Text(
-                text = title,
+                text = variationGroupName,
                 modifier = Modifier
                     .padding(start = 8.dp)
                     .weight(1f)
@@ -73,24 +71,6 @@ fun TargetingListHeader(
                 fontSize = 18.sp,
                 color = colorResource(R.color.text_bold)
             )
-//            if (campaign.status() == CampaignStatus.Accepted || campaign.status() == CampaignStatus.Forced) {
-//                if (variation.isSelected) {
-//                    PillBadge(
-//                        label = "Your version",
-//                        modifier = Modifier,
-//                        backgroundColor = colorResource(R.color.accepted)
-//                    )
-//                } else {
-//                    VariationViewBadge(
-//                        variation = variation,
-//                        modifier = Modifier,
-//                        onClick = {
-//
-//                        }
-//                    )
-//                }
-//                Spacer(modifier = Modifier.width(18.dp))
-//            }
         }
     }
 }

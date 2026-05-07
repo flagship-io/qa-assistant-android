@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONObject
-import java.util.Currency
 
 class CampaignManager {
 
@@ -215,7 +214,7 @@ class CampaignManager {
         currentVisitor = visitorDelegateDTO
         initPreferences()
         val campaigns = getBucketingCampaigns(envId, visitorDelegateDTO)
-        evaluateCampaigns(campaigns, visitorCampaigns)
+        evaluateCampaigns(campaigns, visitorCampaigns, visitorDelegateDTO)
         _campaigns.value = campaigns
         campaigns?.forEach { campaign ->
             System.out.println("#Det23 QACampaign : " + campaign.campaignMetadata.campaignName + " = " + campaign.status()?.title)
@@ -226,7 +225,8 @@ class CampaignManager {
 
     suspend fun evaluateCampaigns(
         campaigns: ArrayList<Campaign>?,
-        visitorCampaigns: List<Campaign>? = null
+        visitorCampaigns: List<Campaign>? = null,
+        visitorDelegateDTO: VisitorDelegateDTO
     ) {
         if (campaigns != null && visitorCampaigns != null) {
             campaigns.forEach { campaign ->
@@ -236,6 +236,15 @@ class CampaignManager {
                         campaign.status(visitorCampaign.status() ?: CampaignStatus.Rejected)
                         campaign.selectedVariationId = visitorCampaign.selectedVariationId
                         System.out.println("#Sel ${campaign.status()?.title} variation id : " + campaign.selectedVariationId)
+                    }
+                }
+//                println("# Tar2 = " + campaign.toString())
+                campaign.variationGroups.forEach { variationGroup ->
+//                    println("# Tar2 = ")
+                    variationGroup?.let {
+                        if (it.isTargetingValid(HashMap(visitorDelegateDTO.context)))
+                            variationGroup.selectVariation(visitorDelegateDTO)
+                        println("# Tar2 targetingGroups = " + variationGroup.targetingGroups.toString())
                     }
                 }
             }

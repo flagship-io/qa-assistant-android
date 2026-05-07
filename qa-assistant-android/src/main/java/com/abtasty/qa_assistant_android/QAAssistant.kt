@@ -7,16 +7,12 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.abtasty.flagship.hits.Hit
 import com.abtasty.flagship.model.Campaign
-import com.abtasty.flagship.qa_assistant.QAAssistantBridge
 import com.abtasty.flagship.visitor.VisitorDelegateDTO
-import com.abtasty.qa_assistant_android.ui.navigation.QAAContentNavigator
-import com.abtasty.qa_assistant_android.ui.navigation.savedScreen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 import java.lang.ref.WeakReference
 
 //object QAAssistant {
@@ -148,7 +144,7 @@ object QAAssistant2 : IQAAssistant2, LifecycleEventObserver {
         overlayButton = null
         adapter?.close()
         adapter = null
-        savedScreen = null
+//        savedScreen = null
         contextWeakReference?.clear()
         contextWeakReference = null
         _coroutineScope?.cancel()
