@@ -12,6 +12,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,10 +56,21 @@ import kotlinx.coroutines.launch
 //}
 
 @Composable
-fun EventsView(behavior: BottomSheetBehavior<*>) {
+fun EventsView(behavior: BottomSheetBehavior<*>, query: String? = null) {
 
     val hits by hitManager.hits.collectAsState()
     val scope = rememberCoroutineScope()
+
+    val filteredHits = remember(hits, query) {
+        if (query.isNullOrEmpty()) {
+            hits
+        } else {
+            hits.filter { hit ->
+                hit.type.toString().contains(query, ignoreCase = true) ||
+                hit.data.toString().contains(query, ignoreCase = true)
+            }
+        }
+    }
 
 
     Column(
@@ -71,7 +83,7 @@ fun EventsView(behavior: BottomSheetBehavior<*>) {
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BasicText("${hits.size} events recorded", modifier = Modifier.weight(1f))
+            BasicText("${filteredHits.size} events recorded", modifier = Modifier.weight(1f))
             ResetAll(
                 "Clear all",
                 ImageVector.vectorResource(R.drawable.icon_clear),
@@ -84,7 +96,7 @@ fun EventsView(behavior: BottomSheetBehavior<*>) {
             )
 
         }
-        if (hits.isEmpty()) {
+        if (filteredHits.isEmpty()) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -99,7 +111,11 @@ fun EventsView(behavior: BottomSheetBehavior<*>) {
                 )
                 BasicText(
                     modifier = Modifier.padding(top = 16.dp),
-                    text = "No event have been recorded so far",
+                    text = if (query.isNullOrEmpty()) {
+                        "No event have been recorded so far"
+                    } else {
+                        "No events match your search"
+                    },
                     style = TextStyle(
                         color = colorResource(R.color.text_light_grey),
                         fontSize = 22.sp,
@@ -108,7 +124,11 @@ fun EventsView(behavior: BottomSheetBehavior<*>) {
                 )
                 BasicText(
                     modifier = Modifier.padding(top = 16.dp),
-                    text = "Interact with the page to see events here.",
+                    text = if (query.isNullOrEmpty()) {
+                        "Interact with the page to see events here."
+                    } else {
+                        "Try a different search term."
+                    },
                     style = TextStyle(
                         color = colorResource(R.color.text_light_grey),
                         fontSize = 16.sp,
@@ -116,7 +136,7 @@ fun EventsView(behavior: BottomSheetBehavior<*>) {
                 )
             }
         } else {
-            EventExpandableList(hits, behavior)
+            EventExpandableList(filteredHits, behavior)
         }
     }
 }

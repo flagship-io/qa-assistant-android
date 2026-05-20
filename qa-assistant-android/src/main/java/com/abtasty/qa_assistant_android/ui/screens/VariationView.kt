@@ -23,7 +23,11 @@ import com.abtasty.qa_assistant_android.ui.components.CampaignListHeader
 import com.abtasty.qa_assistant_android.ui.components.CampaignListItem
 import com.abtasty.qa_assistant_android.ui.components.VariationListHeader
 import com.abtasty.qa_assistant_android.ui.components.VariationListItem
+import com.abtasty.qa_assistant_android.ui.navigation.savedExpandedIds
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+
+
+internal var savedExpandedVariationIds: List<String> = emptyList()
 
 @Composable
 fun VariationView(
@@ -32,6 +36,9 @@ fun VariationView(
     onVariationSwitched: (Campaign, Variation) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var expandedVariationIdsList by rememberSaveable { mutableStateOf(savedExpandedVariationIds) }
+    savedExpandedVariationIds = expandedVariationIdsList
+
     val lazyListState = rememberLazyListState()
 
     val listNotAtTop by remember {
@@ -50,13 +57,13 @@ fun VariationView(
         modifier = Modifier
             .fillMaxWidth()
     ) {
-        var expandedIdsList by rememberSaveable { mutableStateOf(emptyList<String>()) }
-        val expandedIds = remember(expandedIdsList) { expandedIdsList.toSet() }
+//        var expandedIdsList by rememberSaveable { mutableStateOf(emptyList<String>()) }
+//        val expandedIds = remember(expandedIdsList) { expandedIdsList.toSet() }
 
         fun toggle(parentId: String) {
-            expandedIdsList =
-                if (parentId in expandedIds) expandedIdsList.filterNot { it == parentId }
-                else expandedIdsList + parentId
+            expandedVariationIdsList =
+                if (parentId in expandedVariationIdsList) expandedVariationIdsList.filterNot { it == parentId }
+                else expandedVariationIdsList + parentId
         }
 
         LazyColumn(
@@ -75,7 +82,7 @@ fun VariationView(
                             VariationListHeader(
                                 campaign = campaign,
                                 variation = variation,
-                                expanded =  variationId in expandedIds,
+                                expanded =  variationId in expandedVariationIdsList,
                                 onClick = { toggle(variationId) },
                                 isLast = (key == variations.keys.last())
                             )
@@ -83,7 +90,7 @@ fun VariationView(
 
                         item(key = "expended_${variationId}") {
                             AnimatedVisibility(
-                                visible = variationId in expandedIds,
+                                visible = variationId in expandedVariationIdsList,
                                 enter = expandVertically(
                                     animationSpec = tween(
                                         180

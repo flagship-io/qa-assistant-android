@@ -61,16 +61,10 @@ private enum class HomeTab(val label: String) {
     Campaigns("Campaigns"),
     Events("Events"),
     Context("Context");
-
-    companion object {
-//        fun fromString(tab: String): HomeTab = entries.find { it.label == tab } ?: Campaigns
-
-        fun fromInt(tab: Int): HomeTab = entries.find { it.ordinal == tab } ?: Campaigns
-    }
 }
 
 internal var savedTab : Int = 0
-
+internal var savedQuery : String? = null
 
 @Composable
 fun HomeScreen(
@@ -80,7 +74,6 @@ fun HomeScreen(
     campaignManager: CampaignManager = QAAssistant2.campaignManager,
     expandedIds: List<String> = emptyList(),
     onExpandedChange: (String) -> Unit = {}
-
 ) {
 
     var homeTab by rememberSaveable { mutableStateOf(savedTab) }
@@ -95,7 +88,27 @@ fun HomeScreen(
 
     println("[QA ASSISTANT] HomeScreen recomposing with ${parentItems.size} parent items")
 
-    var query by rememberSaveable { mutableStateOf("") }
+    var query by rememberSaveable { mutableStateOf(savedQuery) }
+    savedQuery = query
+
+    val filteredParentItems = remember(parentItems, query) {
+        if (query.isNullOrEmpty()) {
+            parentItems
+        } else {
+            parentItems.mapNotNull { parent ->
+                val filteredCampaigns = parent.campaigns.filter { campaign ->
+                    campaign.campaignMetadata.campaignName.contains(query!!, ignoreCase = true) ||
+                    campaign.campaignMetadata.campaignId.contains(query!!, ignoreCase = true) ||
+                    campaign.campaignMetadata.campaignType.contains(query!!, ignoreCase = true)
+                }
+                if (filteredCampaigns.isNotEmpty()) {
+                    parent.copy(campaigns = filteredCampaigns)
+                } else {
+                    null
+                }
+            }
+        }
+    }
 
     Column (
 
@@ -130,13 +143,14 @@ fun HomeScreen(
                     Spacer(Modifier.height(4.dp))
                     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         BasicTextField(
-                            value = query,
+                            value = query ?: "",
                             onValueChange = { query = it },
                             modifier = Modifier
                                 .fillMaxWidth(0.85f)
                                 .clip(RoundedCornerShape(percent = 25))
                                 .background(Color.White)
-                                .padding(start = 14.dp, top = 12.dp, bottom = 12.dp),
+                                .padding(start = 14.dp),
+//                                .padding(start = 14.dp, top = 12.dp, bottom = 12.dp),
                             singleLine = true,
                             cursorBrush = SolidColor(Color.Gray),
                             textStyle = TextStyle(
@@ -152,7 +166,7 @@ fun HomeScreen(
                                     Box(
                                         Modifier.weight(1f)
                                     ) {
-                                        if (query.isEmpty()) {
+                                        if (query == null || query?.isEmpty() == true) {
                                             Text(
                                                 text = "Search",
                                                 fontSize = 16.sp,
@@ -161,18 +175,33 @@ fun HomeScreen(
                                         }
                                         innerTextField()
                                     }
-                                    IconButton(
-                                        onClick = { /*onQueryChange("")*/ },
-                                        modifier = Modifier
-                                            .heightIn(max = 16.dp)
-                                    ) {
-                                        Image(
-                                            imageVector = ImageVector.vectorResource(R.drawable.search),
-                                            contentDescription = "Clear",
-                                            contentScale = ContentScale.Crop
-                                        )
+                                    if (!query.isNullOrEmpty()) {
+                                        IconButton(
+                                            onClick = { query = "" },
+                                            modifier = Modifier
+//                                                .padding(end = 4.dp)
+                                                .heightIn(min = 4.dp)
+                                        ) {
+                                            Image(
+                                                imageVector = ImageVector.vectorResource(R.drawable.icon_clear),
+                                                contentDescription = "Clear search",
+//                                                modifier = Modifier.padding(4.dp)
+                                            )
+                                        }
+                                    } else {
+                                        IconButton(
+                                            onClick = { },
+                                            modifier = Modifier
+//                                                .padding(end = 4.dp)
+                                                .heightIn(min = 4.dp)
+                                        ) {
+                                            Image(
+                                                imageVector = ImageVector.vectorResource(R.drawable.search),
+                                                contentDescription = "Search",
+//                                                modifier = Modifier.padding(4.dp)
+                                            )
+                                        }
                                     }
-
                                 }
                             }
                         )
@@ -230,12 +259,15 @@ fun HomeScreen(
                         when (tabs[page]) {
                             HomeTab.Campaigns -> CampaignsView(
                                 behavior = behavior,
-                                parentItems = parentItems,
+                                parentItems = filteredParentItems,
                                 onChildClick = { parent, child -> onCampaignClick(child) },
                                 expandedIds = expandedIds.toSet(),
                                 onExpandedChange = onExpandedChange
                             )
-                            HomeTab.Events -> EventsView(behavior = behavior)
+                            HomeTab.Events -> EventsView(
+                                behavior = behavior,
+                                query = query
+                            )
                             HomeTab.Context -> ContextView(behavior = behavior)
                         }
                     }

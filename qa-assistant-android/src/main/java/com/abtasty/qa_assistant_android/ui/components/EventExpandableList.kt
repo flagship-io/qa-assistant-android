@@ -42,7 +42,7 @@ import com.abtasty.qa_assistant_android.ui.screens.timeAgo
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 @Composable
-fun EventExpandableList(hits: ArrayList<Hit.HitDTO>, behavior: BottomSheetBehavior<*>) {
+fun EventExpandableList(hits: List<Hit.HitDTO>, behavior: BottomSheetBehavior<*>) {
 
     val lazyListState = rememberLazyListState()
 

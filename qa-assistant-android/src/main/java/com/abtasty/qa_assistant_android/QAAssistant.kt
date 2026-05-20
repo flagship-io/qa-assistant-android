@@ -8,6 +8,11 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import com.abtasty.flagship.hits.Hit
 import com.abtasty.flagship.model.Campaign
 import com.abtasty.flagship.visitor.VisitorDelegateDTO
+import com.abtasty.qa_assistant_android.ui.navigation.savedCampaignDetailId
+import com.abtasty.qa_assistant_android.ui.navigation.savedExpandedIds
+import com.abtasty.qa_assistant_android.ui.screens.savedDetailTab
+import com.abtasty.qa_assistant_android.ui.screens.savedExpandedVariationIds
+import com.abtasty.qa_assistant_android.ui.screens.savedTab
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -145,6 +150,11 @@ object QAAssistant2 : IQAAssistant2, LifecycleEventObserver {
         adapter?.close()
         adapter = null
 //        savedScreen = null
+        savedTab = 0
+        savedDetailTab = 0
+        savedCampaignDetailId = null
+        savedExpandedIds = emptyList()
+        savedExpandedVariationIds = emptyList()
         contextWeakReference?.clear()
         contextWeakReference = null
         _coroutineScope?.cancel()

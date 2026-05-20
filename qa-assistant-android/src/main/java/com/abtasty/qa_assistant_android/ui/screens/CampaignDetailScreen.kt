@@ -22,7 +22,11 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,6 +59,8 @@ private enum class ToggleTab(override val label: String): Tab {
     Targeting("Targeting"),
 }
 
+internal var savedDetailTab : Int = 0
+
 @Composable
 fun CampaignDetailScreen(
     behavior: BottomSheetBehavior<*>,
@@ -65,8 +71,10 @@ fun CampaignDetailScreen(
     modifier: Modifier = Modifier
 ) {
 
-    println("#Det dtail campaign ${campaign.campaignMetadata.campaignName} + status = " + campaign.status()?.title)
-    println("#Var campaign = " + campaign)
+    var detailTab by rememberSaveable { mutableStateOf(savedDetailTab) }
+
+    savedDetailTab = detailTab
+
     Column(
 
         modifier = Modifier
@@ -184,7 +192,7 @@ fun CampaignDetailScreen(
                             }
 
                             val tabs = if (campaign.campaignMetadata.campaignType == "toggle") ToggleTab.entries else CampaignTab.entries
-                            val pagerState = rememberPagerState(pageCount = { tabs.size })
+                            val pagerState = rememberPagerState(initialPage = detailTab, pageCount = { tabs.size })
                             val scope = rememberCoroutineScope()
 
                             val selectedColor = colorResource(R.color.selected_tab)
@@ -192,6 +200,7 @@ fun CampaignDetailScreen(
 
                             Column(modifier = Modifier.fillMaxWidth()) {
                                 SecondaryTabRow(
+
                                     selectedTabIndex = pagerState.currentPage,
                                     containerColor = Color.Transparent,
                                     contentColor = selectedColor,
@@ -211,8 +220,10 @@ fun CampaignDetailScreen(
                                                 selected = pagerState.currentPage == index,
                                                 onClick = {
                                                     scope.launch {
-                                                        pagerState.animateScrollToPage(index)
+//                                                        pagerState.animateScrollToPage(index)
+                                                        pagerState.scrollToPage(index)
                                                     }
+                                                    detailTab = index
                                                 },
                                                 selectedContentColor = selectedColor,
                                                 unselectedContentColor = unselectedColor,
